@@ -3,8 +3,6 @@
 namespace ExcelFormats\Formats;
 
 use ExcelFormats\Interfaces\iFileExcel;
-
-include_once __DIR__ . '/../../vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -35,7 +33,7 @@ class PhpSpreadsheet implements iFileExcel
     function fillCells($data)
     {
         foreach ($data as $row => $content) {
-            $row += $this->addedRows;
+            $row = intval($row) + $this->addedRows;
             if (isset($content["data"]))
                 $this->fillCellsByArray($content, $row);
             else
@@ -73,14 +71,14 @@ class PhpSpreadsheet implements iFileExcel
 
         $worksheet = $this->objExcel->getActiveSheet();
         $mergedCells = $worksheet->getMergeCells();
-        for ($i = 1; $i <= count($data); $i++) {
+        foreach ($data as $i => $row_data) {
             $row_data = $data[$i];
             foreach ($confg as $col => $id) {
                 if ($id == 'finishRow')
                     continue;
                 $value = $row_data[$id];
-                $worksheet->setCellValue([$col, $row + $i - 1], $value);
-                $this->setHeightRowByCell($col, $row + $i - 1, $mergedCells);
+                $worksheet->setCellValue([$col, $row + $i], $value);
+                $this->setHeightRowByCell($col, $row + $i, $mergedCells);
             }
         }
 
