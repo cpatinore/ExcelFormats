@@ -1,0 +1,21 @@
+{
+    "name": "cpatinore/excel-formats",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "ExcelFormats\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Catherin Patiño Restrepo",
+            "email": "cpatinore@unal.edu.co"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^8.0.2",
+        "phpoffice/phpspreadsheet": "^1.29"
+    }
+}
