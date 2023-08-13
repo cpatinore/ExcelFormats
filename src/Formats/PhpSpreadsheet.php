@@ -48,7 +48,7 @@ class PhpSpreadsheet implements iFileExcel
     }
 
     // Fills
-    function fillCells($data)
+    function fillCells($data):void
     {
         $worksheet = $this->objExcel->getActiveSheet();
         $sheetIndex = $this->objExcel->getIndex($worksheet);
