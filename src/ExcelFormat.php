@@ -17,6 +17,14 @@ class ExcelFormat
     {
         return $this->iFileExcel->selectTemplateExcel();
     }
+    function duplicateSheet($fromSheet, $toSheet)
+    {
+        return $this->iFileExcel->duplicateSheet($fromSheet, $toSheet);
+    }
+    function activeSheet($sheet)
+    {
+        return $this->iFileExcel->activeSheet($sheet);
+    }
 
     function fillCells($data)
     {
@@ -31,6 +39,10 @@ class ExcelFormat
     function addHeader($range)
     {
         $this->iFileExcel->addHeader($range);
+    }
+    function addFooter($footer)
+    {
+        $this->iFileExcel->addFooter($footer);
     }
 
     function setUpFormat($confgFormat)
@@ -47,13 +59,15 @@ class ExcelFormat
         if (isset($confgFormat["header"]) and count($confgFormat["header"]) == 2)
             $this->addHeader($confgFormat["header"]);
 
+        if (isset($confgFormat["footer"]))
+            $this->addFooter($confgFormat["footer"]);
+
     }
 
-    public function createFormat($data, $confgFormat = null)
+    public function createFormat($confgFormat = null)
     {
         $this->selectTemplateExcel();
         $this->setUpFormat($confgFormat);
-        $this->fillCells($data);
     }
 
     public function saveExcel(string $path)
