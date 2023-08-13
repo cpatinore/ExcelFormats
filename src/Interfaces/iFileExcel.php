@@ -31,13 +31,7 @@ interface iFileExcel
      */
     function fillCells(array $data): void;
 
-    /**
-     * Save the created excel file to the specified path
-     * @param string $path: Path to save Excel file
-     * 
-     * @return void
-     */
-    function saveExcel(string $path): void;
+    function saveExcel(string $path);
     function addPaginator($cell): void;
     
     /**

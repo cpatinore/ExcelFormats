@@ -71,7 +71,7 @@ class PhpSpreadsheet implements iFileExcel
         }
     }
 
-    function fillCellsByArray($confg_array, $row): void
+    function fillCellsByArray($confg_array, $row)
     {
 
         $data = $confg_array["data"];
@@ -226,7 +226,7 @@ class PhpSpreadsheet implements iFileExcel
             ->setOddFooter($footer);
     }
 
-    function saveExcel($path): void
+    function saveExcel($path)
     {
         $objWriter = IOFactory::createWriter($this->objExcel, "Xlsx");
         $objWriter->save($path);
