@@ -228,9 +228,13 @@ class PhpSpreadsheet implements iFileExcel
 
     // Merge cells
 
-    function mergeCells($range)
+    function mergeCells($range): void
     {
         $this->objExcel->getActiveSheet()->mergeCells($range);
+    }
+    function unmergeCells($range): void
+    {
+        $this->objExcel->getActiveSheet()->unmergeCells($range);
     }
 
     function mergeCellBySource($mergedRange, $sourceRange, $targetRange)

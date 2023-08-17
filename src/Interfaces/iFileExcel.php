@@ -36,6 +36,7 @@ interface iFileExcel
     function removeRow($row, $cant):void;
 
     function saveExcel(string $path);
+
     function addPaginator($cell): void;
     
     /**
@@ -55,6 +56,11 @@ interface iFileExcel
     function addFooter(string $footer): void;
 
     function copyCells($sourceRange, $destinationRange, $mergeCells = null);
+
     function getMergeCells(): array;
+
+    function mergeCells($range):void;
+    function unmergeCells($range):void;
+
     function getAddedRows(): int;
 }

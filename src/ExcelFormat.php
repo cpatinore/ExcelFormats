@@ -57,10 +57,21 @@ class ExcelFormat
     {
         $this->iFileExcel->copyCells($sourceRange, $destinationRange, $mergeCells);
     }
+
     function getMergeCells(): array
     {
         return $this->iFileExcel->getMergeCells();
     }
+
+    function mergeCells($range)
+    {
+        $this->iFileExcel->mergeCells($range);
+    }
+
+    function unmergeCells($range) : void {
+        $this->iFileExcel->unmergeCells($range);
+    }
+
     function getAddedRows(): int
     {
         return $this->iFileExcel->getAddedRows();
