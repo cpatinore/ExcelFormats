@@ -44,11 +44,11 @@ class ExcelFormat
     {
         $this->iFileExcel->addFooter($footer);
     }
-    function copyCells($sourceRange, $destinationRange){
-        $this->iFileExcel->copyCells($sourceRange, $destinationRange);
+    function copyCells($sourceRange, $destinationRange, $mergeCells = null){
+        $this->iFileExcel->copyCells($sourceRange, $destinationRange, $mergeCells);
     }
     function getMergeCells() {
-        $this->iFileExcel->getMergeCells();
+        return $this->iFileExcel->getMergeCells();
     }
 
     function setUpFormat($confgFormat)
