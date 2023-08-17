@@ -197,7 +197,7 @@ class PhpSpreadsheet implements iFileExcel
             ->setOddFooter($footer);
     }
 
-    function copyCells($sourceRange, $destinationRange)
+    function copyCells($sourceRange, $destinationRange, $mergeCells = null)
     {
         $worksheet = $this->objExcel->getActiveSheet();
 
@@ -223,8 +223,7 @@ class PhpSpreadsheet implements iFileExcel
                 $worksheet->getRowDimension($row)->setRowHeight($worksheet->getRowDimension($row)->getRowHeight());
             }
         }
-
-        $this->mergeCell(implode(":", $sourceRange), implode(":", $destinationRange), "range");
+        $this->mergeCell(implode(":", $sourceRange), implode(":", $destinationRange), "range", $mergeCells);
     }
 
     function mergeCells($range)
@@ -238,10 +237,10 @@ class PhpSpreadsheet implements iFileExcel
         $targetRange = explode(":", $targetRange);
         $destinationRowOffset = intval(substr($targetRange[0], 1)) - intval(substr($sourceRange[0], 1));
         [$cellStart, $cellEnd] = explodeRange($mergedRange);
-        
+
         $cellStart[1] = intval($cellStart[1]) + $destinationRowOffset;
         $cellEnd[1] = intval($cellEnd[1]) + $destinationRowOffset;
-        
+
         $this->objExcel->getActiveSheet()->mergeCells(implode("", $cellStart) . ":" . implode("", $cellEnd));
     }
 
@@ -262,10 +261,12 @@ class PhpSpreadsheet implements iFileExcel
         }
     }
 
-    function mergeCell($sourceRange, $targetRange, $type = "table"): void
+    function mergeCell($sourceRange, $targetRange, $type = "table", $mergeCells = null): void
     {
         $worksheet = $this->objExcel->getActiveSheet();
-        $mergeCells = $worksheet->getMergeCells();
+        if (!isset($mergeCells))
+            $mergeCells = $worksheet->getMergeCells();
+        echo var_dump($mergeCells);
         foreach ($mergeCells as $mergeCell) {
             $mergedRange = Coordinate::splitRange($mergeCell);
             foreach ($mergedRange as $range) {
@@ -282,6 +283,11 @@ class PhpSpreadsheet implements iFileExcel
 
 
         }
+    }
+
+    function getMergeCells()
+    {
+        return $this->objExcel->getActiveSheet()->getMergeCells();
     }
 
     function saveExcel($path)
