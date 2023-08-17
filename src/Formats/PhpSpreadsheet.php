@@ -94,7 +94,7 @@ class PhpSpreadsheet implements iFileExcel
         foreach ($data as $i => $row_data) {
             $row_data = $data[$i];
             foreach ($confg as $col => $id) {
-                if ($id == 'finishRow')
+                if ($id == 'finishRow' or array_key_exists($id, $row_data))
                     continue;
                 $value = $row_data[$id];
                 $worksheet->setCellValue([$col, $row + $i], $value);

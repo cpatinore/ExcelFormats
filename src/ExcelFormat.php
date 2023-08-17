@@ -30,6 +30,9 @@ class ExcelFormat
     {
         $this->iFileExcel->fillCells($data);
     }
+    function addRow($row, $cant) : void {
+        $this->iFileExcel->addRow($row, $cant);
+    }
 
     function addPaginator($cell)
     {

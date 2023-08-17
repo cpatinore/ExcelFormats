@@ -31,6 +31,8 @@ interface iFileExcel
      */
     function fillCells(array $data): void;
 
+    function addRow($row, $cant):void;
+
     function saveExcel(string $path);
     function addPaginator($cell): void;
     
