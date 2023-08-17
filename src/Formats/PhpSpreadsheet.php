@@ -84,17 +84,19 @@ class PhpSpreadsheet implements iFileExcel
         $confg = $confg_array;
 
         $cols_using = array_keys($confg);
-        $min_col = min($cols_using);
-        $max_col = max($cols_using);
+        $minCol = min($cols_using);
+        $maxCol = max($cols_using);
+        $cant = count($data);
 
-        $this->addRowWithStyle($row, count($data), $min_col, $max_col);
+        $this->addRow($row, $cant);
+        $this->applyFormatByRowCol($minCol, $maxCol, $row, $cant);
 
         $worksheet = $this->objExcel->getActiveSheet();
         $mergedCells = $worksheet->getMergeCells();
         foreach ($data as $i => $row_data) {
             $row_data = $data[$i];
             foreach ($confg as $col => $id) {
-                if ($id == 'finishRow' or array_key_exists($id, $row_data))
+                if ($id == 'finishRow' or !array_key_exists($id, $row_data))
                     continue;
                 $value = $row_data[$id];
                 $worksheet->setCellValue([$col, $row + $i], $value);
@@ -159,17 +161,39 @@ class PhpSpreadsheet implements iFileExcel
         $worksheet->duplicateStyle($fromStyleRange, $toCell);
     }
 
-    // adds
-    function addRowWithStyle($row, $cant, $min_col, $max_col): void
+    function copyCells($sourceRange, $destinationRange, $mergeCells = null)
     {
-        $this->addRow($row, $cant);
-        $this->applyFormatByRowCol(
-            $min_col,
-            $max_col,
-            $row,
-            $cant
-        );
+        $worksheet = $this->objExcel->getActiveSheet();
+
+        $toStartIterator = explodeRange($sourceRange)[0];
+        $toEndIterator = explodeRange($sourceRange)[1];
+
+        $sourceRange = explode(":", $sourceRange);
+        $destinationRange = explode(":", $destinationRange);
+
+        $destinationColumnOffset = ord($destinationRange[0][0]) - ord($sourceRange[0][0]);
+        $destinationRowOffset = intval(substr($destinationRange[0], 1)) - intval(substr($sourceRange[0], 1));
+
+        for ($row = intval($toStartIterator[1]); $row <= intval($toEndIterator[1]); $row++) {
+            for ($col = $toStartIterator[0]; $col <= $toEndIterator[0]; $col++) {
+                $cellCoordinate = $col . $row;
+                $destinationCellCoordinate = chr(ord($col) + $destinationColumnOffset) . ($row + $destinationRowOffset);
+
+                $cellValue = $worksheet->getCell($cellCoordinate)->getValue();
+                $worksheet->setCellValue($destinationCellCoordinate, $cellValue);
+
+                $cellStyle = $worksheet->getStyle($cellCoordinate);
+                $worksheet->duplicateStyle($cellStyle, $destinationCellCoordinate);
+
+                $worksheet->getColumnDimension($col)->setWidth($worksheet->getColumnDimension($col)->getWidth());
+                $worksheet->getRowDimension($row)->setRowHeight($worksheet->getRowDimension($row)->getRowHeight());
+            }
+        }
+
+        $this->mergeCell(implode(":", $sourceRange), implode(":", $destinationRange), "range", $mergeCells);
     }
+
+    // adds
 
     function addRow($row, $cant): void
     {
@@ -197,34 +221,12 @@ class PhpSpreadsheet implements iFileExcel
             ->setOddFooter($footer);
     }
 
-    function copyCells($sourceRange, $destinationRange, $mergeCells = null)
+    function removeRow($row, $cant): void
     {
-        $worksheet = $this->objExcel->getActiveSheet();
-        $sourceCellIterator = explodeRange($sourceRange)[1];
-        $sourceRange = explode(":", $sourceRange);
-        $destinationRange = explode(":", $destinationRange);
-
-        $destinationColumnOffset = ord($destinationRange[0][0]) - ord($sourceRange[0][0]);
-        $destinationRowOffset = intval(substr($destinationRange[0], 1)) - intval(substr($sourceRange[0], 1));
-        
-        for ($row = 1; $row <= intval($sourceCellIterator[1]); $row++) {
-            for ($col = 'A'; $col <= $sourceCellIterator[0]; $col++) {
-                $cellCoordinate = $col . $row;
-                $destinationCellCoordinate = chr(ord($col) + $destinationColumnOffset) . ($row + $destinationRowOffset);
-
-                $cellValue = $worksheet->getCell($cellCoordinate)->getValue();
-                $worksheet->setCellValue($destinationCellCoordinate, $cellValue);
-
-                $cellStyle = $worksheet->getStyle($cellCoordinate);
-                $worksheet->duplicateStyle($cellStyle, $destinationCellCoordinate);
-
-                $worksheet->getColumnDimension($col)->setWidth($worksheet->getColumnDimension($col)->getWidth());
-                $worksheet->getRowDimension($row)->setRowHeight($worksheet->getRowDimension($row)->getRowHeight());
-            }
-        }
-
-        $this->mergeCell(implode(":", $sourceRange), implode(":", $destinationRange), "range", $mergeCells);
+        $this->objExcel->getActiveSheet()->removeRow($row, $cant);
     }
+
+    // Merge cells
 
     function mergeCells($range)
     {
@@ -266,7 +268,7 @@ class PhpSpreadsheet implements iFileExcel
         $worksheet = $this->objExcel->getActiveSheet();
         if (!isset($mergeCells))
             $mergeCells = $worksheet->getMergeCells();
-        
+
         foreach ($mergeCells as $mergeCell) {
             $mergedRange = Coordinate::splitRange($mergeCell);
             foreach ($mergedRange as $range) {
@@ -285,11 +287,13 @@ class PhpSpreadsheet implements iFileExcel
         }
     }
 
-    function getMergeCells():array
+    function getMergeCells(): array
     {
         return $this->objExcel->getActiveSheet()->getMergeCells();
     }
-    function getAddedRows():int {
+
+    function getAddedRows(): int
+    {
         $worksheet = $this->objExcel->getActiveSheet();
         $sheetIndex = $this->objExcel->getIndex($worksheet);
         return $this->addedRows[$sheetIndex];

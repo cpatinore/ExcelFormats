@@ -30,8 +30,14 @@ class ExcelFormat
     {
         $this->iFileExcel->fillCells($data);
     }
-    function addRow($row, $cant) : void {
+
+    function addRow($row, $cant): void
+    {
         $this->iFileExcel->addRow($row, $cant);
+    }
+    function removeRow($row, $cant): void
+    {
+        $this->iFileExcel->removeRow($row, $cant);
     }
 
     function addPaginator($cell)
@@ -47,13 +53,16 @@ class ExcelFormat
     {
         $this->iFileExcel->addFooter($footer);
     }
-    function copyCells($sourceRange, $destinationRange, $mergeCells = null){
+    function copyCells($sourceRange, $destinationRange, $mergeCells = null)
+    {
         $this->iFileExcel->copyCells($sourceRange, $destinationRange, $mergeCells);
     }
-    function getMergeCells(): array {
+    function getMergeCells(): array
+    {
         return $this->iFileExcel->getMergeCells();
     }
-    function getAddedRows(): int {
+    function getAddedRows(): int
+    {
         return $this->iFileExcel->getAddedRows();
     }
 

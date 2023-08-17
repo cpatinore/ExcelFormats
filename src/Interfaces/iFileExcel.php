@@ -33,6 +33,8 @@ interface iFileExcel
 
     function addRow($row, $cant):void;
 
+    function removeRow($row, $cant):void;
+
     function saveExcel(string $path);
     function addPaginator($cell): void;
     
