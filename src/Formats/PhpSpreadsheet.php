@@ -162,9 +162,6 @@ class PhpSpreadsheet implements iFileExcel
     // adds
     function addRowWithStyle($row, $cant, $min_col, $max_col): void
     {
-        $worksheet = $this->objExcel->getActiveSheet();
-        $sheetIndex = $this->objExcel->getIndex($worksheet);
-        $this->addedRows[$sheetIndex] += $cant;
         $this->addRow($row, $cant);
         $this->applyFormatByRowCol(
             $min_col,
@@ -177,6 +174,9 @@ class PhpSpreadsheet implements iFileExcel
     function addRow($row, $cant): void
     {
         $this->objExcel->getActiveSheet()->insertNewRowBefore($row, $cant);
+        $worksheet = $this->objExcel->getActiveSheet();
+        $sheetIndex = $this->objExcel->getIndex($worksheet);
+        $this->addedRows[$sheetIndex] += $cant;
     }
 
     function addPaginator($cell): void
@@ -200,16 +200,15 @@ class PhpSpreadsheet implements iFileExcel
     function copyCells($sourceRange, $destinationRange, $mergeCells = null)
     {
         $worksheet = $this->objExcel->getActiveSheet();
-
+        $sourceCellIterator = explodeRange($sourceRange)[1];
         $sourceRange = explode(":", $sourceRange);
         $destinationRange = explode(":", $destinationRange);
 
-        $sourceCellIterator = $worksheet->getHighestRowAndColumn();
         $destinationColumnOffset = ord($destinationRange[0][0]) - ord($sourceRange[0][0]);
         $destinationRowOffset = intval(substr($destinationRange[0], 1)) - intval(substr($sourceRange[0], 1));
-
-        for ($row = 1; $row <= $sourceCellIterator['row']; $row++) {
-            for ($col = 'A'; $col <= $sourceCellIterator['column']; $col++) {
+        
+        for ($row = 1; $row <= intval($sourceCellIterator[1]); $row++) {
+            for ($col = 'A'; $col <= $sourceCellIterator[0]; $col++) {
                 $cellCoordinate = $col . $row;
                 $destinationCellCoordinate = chr(ord($col) + $destinationColumnOffset) . ($row + $destinationRowOffset);
 
@@ -223,6 +222,7 @@ class PhpSpreadsheet implements iFileExcel
                 $worksheet->getRowDimension($row)->setRowHeight($worksheet->getRowDimension($row)->getRowHeight());
             }
         }
+
         $this->mergeCell(implode(":", $sourceRange), implode(":", $destinationRange), "range", $mergeCells);
     }
 
