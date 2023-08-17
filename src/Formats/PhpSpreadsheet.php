@@ -224,7 +224,7 @@ class PhpSpreadsheet implements iFileExcel
             }
         }
 
-        $this->mergeCell($sourceRange, $destinationRange, "range");
+        $this->mergeCell(implode(":", $sourceRange), implode(":", $destinationRange), "range");
     }
 
     function mergeCells($range)
@@ -234,13 +234,15 @@ class PhpSpreadsheet implements iFileExcel
 
     function mergeCellBySource($mergedRange, $sourceRange, $targetRange)
     {
+        $sourceRange = explode(":", $sourceRange);
+        $targetRange = explode(":", $targetRange);
         $destinationRowOffset = intval(substr($targetRange[0], 1)) - intval(substr($sourceRange[0], 1));
         [$cellStart, $cellEnd] = explodeRange($mergedRange);
-
+        
         $cellStart[1] = intval($cellStart[1]) + $destinationRowOffset;
         $cellEnd[1] = intval($cellEnd[1]) + $destinationRowOffset;
-
-        $this->objExcel->getActiveSheet()->mergeCells(implode("", $cellStart).":".implode("", $cellEnd));
+        
+        $this->objExcel->getActiveSheet()->mergeCells(implode("", $cellStart) . ":" . implode("", $cellEnd));
     }
 
     function mergeTableBySource($mergedRange, $sourceRange, $targetRange)
@@ -264,16 +266,15 @@ class PhpSpreadsheet implements iFileExcel
     {
         $worksheet = $this->objExcel->getActiveSheet();
         $mergeCells = $worksheet->getMergeCells();
-
         foreach ($mergeCells as $mergeCell) {
             $mergedRange = Coordinate::splitRange($mergeCell);
             foreach ($mergedRange as $range) {
                 [$startCell, $endCell] = $range;
-                if (!($worksheet->getCell($startCell)->isInRange($sourceRange) && $worksheet->getCell($endCell)->isInRange($sourceRange))) {
-                    if($type == "table"){
+                if (($worksheet->getCell($startCell)->isInRange($sourceRange) && $worksheet->getCell($endCell)->isInRange($sourceRange))) {
+                    if ($type == "table") {
                         $this->mergeTableBySource($mergedRange, $sourceRange, $targetRange);
-                    }else{
-                        $this->mergeCellBySource($mergedRange, $sourceRange, $targetRange);
+                    } else {
+                        $this->mergeCellBySource($mergeCell, $sourceRange, $targetRange);
                     }
                     break;
                 }
