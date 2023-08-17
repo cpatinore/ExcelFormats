@@ -266,7 +266,7 @@ class PhpSpreadsheet implements iFileExcel
         $worksheet = $this->objExcel->getActiveSheet();
         if (!isset($mergeCells))
             $mergeCells = $worksheet->getMergeCells();
-        echo var_dump($mergeCells);
+        
         foreach ($mergeCells as $mergeCell) {
             $mergedRange = Coordinate::splitRange($mergeCell);
             foreach ($mergedRange as $range) {
@@ -285,9 +285,14 @@ class PhpSpreadsheet implements iFileExcel
         }
     }
 
-    function getMergeCells()
+    function getMergeCells():array
     {
         return $this->objExcel->getActiveSheet()->getMergeCells();
+    }
+    function getAddedRows():int {
+        $worksheet = $this->objExcel->getActiveSheet();
+        $sheetIndex = $this->objExcel->getIndex($worksheet);
+        return $this->addedRows[$sheetIndex];
     }
 
     function saveExcel($path)

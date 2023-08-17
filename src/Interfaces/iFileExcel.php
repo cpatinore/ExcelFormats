@@ -51,5 +51,6 @@ interface iFileExcel
     function addFooter(string $footer): void;
 
     function copyCells($sourceRange, $destinationRange, $mergeCells = null);
-    function getMergeCells();
+    function getMergeCells(): array;
+    function getAddedRows(): int;
 }

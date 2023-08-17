@@ -47,8 +47,11 @@ class ExcelFormat
     function copyCells($sourceRange, $destinationRange, $mergeCells = null){
         $this->iFileExcel->copyCells($sourceRange, $destinationRange, $mergeCells);
     }
-    function getMergeCells() {
+    function getMergeCells(): array {
         return $this->iFileExcel->getMergeCells();
+    }
+    function getAddedRows(): int {
+        return $this->iFileExcel->getAddedRows();
     }
 
     function setUpFormat($confgFormat)
