@@ -44,6 +44,9 @@ class ExcelFormat
     {
         $this->iFileExcel->addFooter($footer);
     }
+    function copyCells($sourceRange, $destinationRange){
+        $this->iFileExcel->copyCells($sourceRange, $destinationRange);
+    }
 
     function setUpFormat($confgFormat)
     {

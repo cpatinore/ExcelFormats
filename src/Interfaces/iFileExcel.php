@@ -49,4 +49,6 @@ interface iFileExcel
      * @return void
      */
     function addFooter(string $footer): void;
+
+    function copyCells($sourceRange, $destinationRange);
 }

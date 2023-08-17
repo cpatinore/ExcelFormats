@@ -5,7 +5,10 @@
     "autoload": {
         "psr-4": {
             "ExcelFormats\\": "src/"
-        }
+        },
+        "files": [
+            "src/Helpers/functions.php"
+        ]
     },
     "authors": [
         {

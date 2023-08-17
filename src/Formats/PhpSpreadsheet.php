@@ -6,6 +6,7 @@ use ExcelFormats\Interfaces\iFileExcel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style;
 
 class PhpSpreadsheet implements iFileExcel
 {
@@ -48,7 +49,7 @@ class PhpSpreadsheet implements iFileExcel
     }
 
     // Fills
-    function fillCells($data):void
+    function fillCells($data): void
     {
         $worksheet = $this->objExcel->getActiveSheet();
         $sheetIndex = $this->objExcel->getIndex($worksheet);
@@ -115,37 +116,7 @@ class PhpSpreadsheet implements iFileExcel
 
         $sourceStyle = $worksheet->getStyle($sourceRange);
         $worksheet->duplicateStyle($sourceStyle, $targetRange);
-        $this->mergeCell($worksheet, $sourceRange, $from_row, $row);
-    }
-
-    function mergeCell($worksheet, $sourceRange, $from_row, $to_row): void
-    {
-        $mergeCells = $worksheet->getMergeCells($sourceRange);
-        foreach ($mergeCells as $mergeCell) {
-            $mergedRange = Coordinate::splitRange($mergeCell);
-            $isWithinSourceRange = true;
-            foreach ($mergedRange as $range) {
-                [$startCell, $endCell] = $range;
-                if (
-                    !($worksheet->getCell($startCell)->isInRange($sourceRange) &&
-                        $worksheet->getCell($endCell)->isInRange($sourceRange))
-                ) {
-                    $isWithinSourceRange = false;
-                    break;
-                }
-            }
-
-            if ($isWithinSourceRange) {
-                list($columnStart, $rowStart) = Coordinate::coordinateFromString($mergedRange[0][0]);
-                list($columnEnd, $rowEnd) = Coordinate::coordinateFromString($mergedRange[0][1]);
-
-                for ($i = 0; $i < $from_row - $to_row; $i++) {
-                    $rowMergeStart = $to_row + $i;
-                    $rowMergeEnd = $to_row + $rowEnd - $rowStart + $i;
-                    $worksheet->mergeCells("$columnStart$rowMergeStart:$columnEnd$rowMergeEnd");
-                }
-            }
-        }
+        $this->mergeCell($sourceRange, $targetRange);
     }
 
     function setHeightRowByCell($col, $row, $mergedCells): void
@@ -224,6 +195,92 @@ class PhpSpreadsheet implements iFileExcel
             ->getActiveSheet()
             ->getHeaderFooter()
             ->setOddFooter($footer);
+    }
+
+    function copyCells($sourceRange, $destinationRange)
+    {
+        $worksheet = $this->objExcel->getActiveSheet();
+
+        $sourceRange = explode(":", $sourceRange);
+        $destinationRange = explode(":", $destinationRange);
+
+        $sourceCellIterator = $worksheet->getHighestRowAndColumn();
+        $destinationColumnOffset = ord($destinationRange[0][0]) - ord($sourceRange[0][0]);
+        $destinationRowOffset = intval(substr($destinationRange[0], 1)) - intval(substr($sourceRange[0], 1));
+
+        for ($row = 1; $row <= $sourceCellIterator['row']; $row++) {
+            for ($col = 'A'; $col <= $sourceCellIterator['column']; $col++) {
+                $cellCoordinate = $col . $row;
+                $destinationCellCoordinate = chr(ord($col) + $destinationColumnOffset) . ($row + $destinationRowOffset);
+
+                $cellValue = $worksheet->getCell($cellCoordinate)->getValue();
+                $worksheet->setCellValue($destinationCellCoordinate, $cellValue);
+
+                $cellStyle = $worksheet->getStyle($cellCoordinate);
+                $worksheet->duplicateStyle($cellStyle, $destinationCellCoordinate);
+
+                $worksheet->getColumnDimension($col)->setWidth($worksheet->getColumnDimension($col)->getWidth());
+                $worksheet->getRowDimension($row)->setRowHeight($worksheet->getRowDimension($row)->getRowHeight());
+            }
+        }
+
+        $this->mergeCell($sourceRange, $destinationRange, "range");
+    }
+
+    function mergeCells($range)
+    {
+        $this->objExcel->getActiveSheet()->mergeCells($range);
+    }
+
+    function mergeCellBySource($mergedRange, $sourceRange, $targetRange)
+    {
+        $destinationRowOffset = intval(substr($targetRange[0], 1)) - intval(substr($sourceRange[0], 1));
+        [$cellStart, $cellEnd] = explodeRange($mergedRange);
+
+        $cellStart[1] = intval($cellStart[1]) + $destinationRowOffset;
+        $cellEnd[1] = intval($cellEnd[1]) + $destinationRowOffset;
+
+        $this->objExcel->getActiveSheet()->mergeCells(implode("", $cellStart).":".implode("", $cellEnd));
+    }
+
+    function mergeTableBySource($mergedRange, $sourceRange, $targetRange)
+    {
+        list($columnStart, $rowStart) = Coordinate::coordinateFromString($mergedRange[0][0]);
+        list($columnEnd, $rowEnd) = Coordinate::coordinateFromString($mergedRange[0][1]);
+
+        [$toStart, $a] = explodeRange($sourceRange);
+        [$fromStart, $b] = explodeRange($targetRange);
+
+        $toRow = intval($toStart[1]);
+        $fromRow = intval($fromStart[1]);
+        for ($i = 0; $i < $toRow - $fromRow; $i++) {
+            $rowMergeStart = $fromRow + $i;
+            $rowMergeEnd = $fromRow + $rowEnd - $rowStart + $i;
+            $this->mergeCells("$columnStart$rowMergeStart:$columnEnd$rowMergeEnd");
+        }
+    }
+
+    function mergeCell($sourceRange, $targetRange, $type = "table"): void
+    {
+        $worksheet = $this->objExcel->getActiveSheet();
+        $mergeCells = $worksheet->getMergeCells();
+
+        foreach ($mergeCells as $mergeCell) {
+            $mergedRange = Coordinate::splitRange($mergeCell);
+            foreach ($mergedRange as $range) {
+                [$startCell, $endCell] = $range;
+                if (!($worksheet->getCell($startCell)->isInRange($sourceRange) && $worksheet->getCell($endCell)->isInRange($sourceRange))) {
+                    if($type == "table"){
+                        $this->mergeTableBySource($mergedRange, $sourceRange, $targetRange);
+                    }else{
+                        $this->mergeCellBySource($mergedRange, $sourceRange, $targetRange);
+                    }
+                    break;
+                }
+            }
+
+
+        }
     }
 
     function saveExcel($path)
