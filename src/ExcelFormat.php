@@ -40,11 +40,6 @@ class ExcelFormat
         $this->iFileExcel->removeRow($row, $cant);
     }
 
-    function addPaginator($cell)
-    {
-        $this->iFileExcel->addPaginator($cell);
-    }
-
     function addHeader($range)
     {
         $this->iFileExcel->addHeader($range);
