@@ -40,7 +40,7 @@ class PhpSpreadsheet implements iFileExcel
         $this->addedRows[$index] = 0;
     }
 
-    function copyCells(string $sourceRange, string $destinationRange, array $mergeCells = null)
+    function copyCells(string $sourceRange, string $destinationRange, array $mergeCells = null): void
     {
         $worksheet = $this->objExcel->getActiveSheet();
 
