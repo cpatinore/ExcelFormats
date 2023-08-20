@@ -314,7 +314,7 @@ class PhpSpreadsheet implements iFileExcel
      * 
      * @return void
      */
-    function mergeTableBySource(string $mergedRange, string $sourceRange, string $targetRange): void
+    function mergeTableBySource(array $mergedRange, string $sourceRange, string $targetRange): void
     {
         list($columnStart, $rowStart) = Coordinate::coordinateFromString($mergedRange[0][0]);
         list($columnEnd, $rowEnd) = Coordinate::coordinateFromString($mergedRange[0][1]);
