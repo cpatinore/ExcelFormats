@@ -6,6 +6,7 @@ use ExcelFormats\Interfaces\iFileExcel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Style;
 
 class PhpSpreadsheet implements iFileExcel
 {
@@ -40,38 +41,39 @@ class PhpSpreadsheet implements iFileExcel
         $this->addedRows[$index] = 0;
     }
 
-    function copyCells(string $sourceRange, string $destinationRange, array $mergeCells = null): void
+    function copyCells(string $fromRange, string $toRange, array $mergeCells = null): void
     {
         $worksheet = $this->objExcel->getActiveSheet();
 
-        $toStartIterator = explodeRange($sourceRange)[0];
-        $toEndIterator = explodeRange($sourceRange)[1];
+        $fromStartIt = explodeRange($fromRange)[0];
+        $fromEndIt = explodeRange($fromRange)[1];
 
-        $sourceRange = explode(":", $sourceRange);
-        $destinationRange = explode(":", $destinationRange);
+        $fromRange = explode(":", $fromRange);
+        $toRange = explode(":", $toRange);
 
-        $destinationColumnOffset = ord($destinationRange[0][0]) - ord($sourceRange[0][0]);
-        $destinationRowOffset = intval(substr($destinationRange[0], 1)) - intval(substr($sourceRange[0], 1));
+        $ColumnOffset = ord($toRange[0][0]) - ord($fromRange[0][0]);
+        $RowOffset = intval(substr($toRange[0], 1)) - intval(substr($fromRange[0], 1));
 
-        for ($row = intval($toStartIterator[1]); $row <= intval($toEndIterator[1]); $row++) {
-            for ($col = $toStartIterator[0]; $col <= $toEndIterator[0]; $col++) {
-                $cellCoordinate = $col . $row;
-                $destinationCellCoordinate = chr(ord($col) + $destinationColumnOffset) . ($row + $destinationRowOffset);
+        for ($fromRow = intval($fromStartIt[1]); $fromRow <= intval($fromEndIt[1]); $fromRow++) {
+            
+            for ($fromCol = $fromStartIt[0]; $fromCol <= $fromEndIt[0]; $fromCol++) {
+                
+                $fromCell = $fromCol . $fromRow;
+                $toCell = chr(ord($fromCol) + $ColumnOffset) . ($fromRow + $RowOffset);
 
-                $cellValue = $worksheet->getCell($cellCoordinate)->getValue();
-                $worksheet->setCellValue($destinationCellCoordinate, $cellValue);
+                $cellValue = $worksheet->getCell($fromCell)->getValue();
+                $worksheet->setCellValue($toCell, $cellValue);
 
-                $cellStyle = $worksheet->getStyle($cellCoordinate);
-                $worksheet->duplicateStyle($cellStyle, $destinationCellCoordinate);
-
-                $this->numberFormat($cellCoordinate, $destinationCellCoordinate);
-
-                $worksheet->getColumnDimension($col)->setWidth($worksheet->getColumnDimension($col)->getWidth());
-                $worksheet->getRowDimension($row)->setRowHeight($worksheet->getRowDimension($row)->getRowHeight());
+                $cellStyle = $worksheet->getStyle($fromCell);
+                $worksheet->duplicateStyle($cellStyle, $toCell);
+                
+            
+                $this->numberFormat($fromCell, $toCell);
+                $worksheet->getRowDimension(($fromRow + $RowOffset))->setRowHeight($worksheet->getRowDimension($fromRow)->getRowHeight());
             }
         }
 
-        $this->mergeCell(implode(":", $sourceRange), implode(":", $destinationRange), "range", $mergeCells);
+        $this->mergeCell(implode(":", $fromRange), implode(":", $toRange), "range", $mergeCells);
     }
 
     function activeSheet($sheet): void
@@ -264,16 +266,20 @@ class PhpSpreadsheet implements iFileExcel
         );
 
         $keys = array_keys($keys);
-        $totalWidth = 12.89;
+        $cellStyle = $worksheet->getStyle($targetCell);
+        $fontSize = $cellStyle->getFont()->getSize();
+        $totalWidth = $worksheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->getWidth();
+        
         if (count($keys) > 0) {
             [$startCell, $endCell] = explode(":", $keys[0]);
             $startCol = Coordinate::columnIndexFromString($worksheet->getCell($startCell)->getColumn());
             $endCol = Coordinate::columnIndexFromString($worksheet->getCell($endCell)->getColumn());
-            $totalWidth *= ($endCol - $startCol);
+            $totalWidth *= abs($endCol - $startCol);
         }
+        
+        $newHeight = ceil((strlen($worksheet->getCell([$col, $row])->getValue()) + 1) / $totalWidth) * $fontSize * 1.8;
 
-        $newHeight = ceil((strlen($worksheet->getCell([$col, $row])->getValue()) + 1) / $totalWidth) * 18;
-
+        
         if ($currentHeight < $newHeight)
             $worksheet->getRowDimension($row)->setRowHeight($newHeight, 'px');
     }
@@ -302,11 +308,11 @@ class PhpSpreadsheet implements iFileExcel
         $targetRange = explode(":", $targetRange);
         $destinationRowOffset = intval(substr($targetRange[0], 1)) - intval(substr($sourceRange[0], 1));
         [$cellStart, $cellEnd] = explodeRange($mergedRange);
+        $formCell = implode("", $cellStart);
 
         $cellStart[1] = intval($cellStart[1]) + $destinationRowOffset;
         $cellEnd[1] = intval($cellEnd[1]) + $destinationRowOffset;
-
-        $this->numberFormat($mergedRange[0][0], implode("", $cellStart));
+        $this->numberFormat($formCell, implode("", $cellStart));
         $this->objExcel->getActiveSheet()->mergeCells(implode("", $cellStart) . ":" . implode("", $cellEnd));
     }
 
