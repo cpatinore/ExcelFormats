@@ -64,6 +64,8 @@ class PhpSpreadsheet implements iFileExcel
                 $cellStyle = $worksheet->getStyle($cellCoordinate);
                 $worksheet->duplicateStyle($cellStyle, $destinationCellCoordinate);
 
+                $this->numberFormat($cellCoordinate, $destinationCellCoordinate);
+
                 $worksheet->getColumnDimension($col)->setWidth($worksheet->getColumnDimension($col)->getWidth());
                 $worksheet->getRowDimension($row)->setRowHeight($worksheet->getRowDimension($row)->getRowHeight());
             }
@@ -304,6 +306,7 @@ class PhpSpreadsheet implements iFileExcel
         $cellStart[1] = intval($cellStart[1]) + $destinationRowOffset;
         $cellEnd[1] = intval($cellEnd[1]) + $destinationRowOffset;
 
+        $this->numberFormat($mergedRange[0][0], implode("", $cellStart));
         $this->objExcel->getActiveSheet()->mergeCells(implode("", $cellStart) . ":" . implode("", $cellEnd));
     }
 
@@ -327,6 +330,7 @@ class PhpSpreadsheet implements iFileExcel
         for ($i = 0; $i < $toRow - $fromRow; $i++) {
             $rowMergeStart = $fromRow + $i;
             $rowMergeEnd = $fromRow + $rowEnd - $rowStart + $i;
+            $this->numberFormat($mergedRange[0][0], "$columnStart$rowMergeStart");
             $this->mergeCells("$columnStart$rowMergeStart:$columnEnd$rowMergeEnd");
         }
     }
@@ -361,5 +365,14 @@ class PhpSpreadsheet implements iFileExcel
 
         }
     }
+
+    function numberFormat($fromCell, $toCell)
+    {
+        $worksheet = $this->objExcel->getActiveSheet();
+        $fromCellStyle = $worksheet->getStyle($fromCell);
+        $formCellStyleArray = $fromCellStyle->getNumberFormat()->getFormatCode();
+        $worksheet->getStyle($toCell)->getNumberFormat()->setFormatCode($formCellStyleArray);
+    }
+
 
 }
